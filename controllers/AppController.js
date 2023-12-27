@@ -1,30 +1,36 @@
 // controllers/AppController.js
-import { users, files } from '../db'; // Assuming you have users and files collections in your database
-import redisClient from '../utils/redis';
+const { getRedisStatus, getDBStatus, countUsers, countFiles } = require('../utils');
 
 const AppController = {
-  async getStatus(req, res) {
-    const redisAlive = redisClient.isAlive();
-    // Assume you have a function to check if the DB is alive (replace with your actual implementation)
-    const dbAlive = await checkDb(); 
+  getStatus: async (req, res) => {
+    try {
+      const redisStatus = await getRedisStatus();
+      const dbStatus = await getDBStatus();
 
-    res.status(200).json({ redis: redisAlive, db: dbAlive });
+      res.status(200).json({
+        redis: redisStatus,
+        db: dbStatus,
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
   },
 
-  async getStats(req, res) {
-    const userCount = await users.countDocuments();
-    const fileCount = await files.countDocuments();
+  getStats: async (req, res) => {
+    try {
+      const usersCount = await countUsers();
+      const filesCount = await countFiles();
 
-    res.status(200).json({ users: userCount, files: fileCount });
+      res.status(200).json({
+        users: usersCount,
+        files: filesCount,
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
   },
 };
 
-// Mock function for checking if the DB is alive
-async function checkDb() {
-  // Replace this with your actual implementation
-  // You may use a function to check the connection or perform a sample query
-  // Return true if the DB is alive, otherwise false
-  return true;
-}
-
-export default AppController;
+module.exports = AppController;
